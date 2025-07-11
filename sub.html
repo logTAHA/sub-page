@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>اطلاعات اشتراک</title>
-  <script src="https://logtaha.github.io/static-page/js/tailwind-3.4.16.js"></script>
-  <link href="https://logtaha.github.io/static-page/css/Vazirmatn-Variable-font-face.css" rel="stylesheet" type="text/css" />
-  <script src="https://logtaha.github.io/static-page/js/jalaali.min.js"></script>
-  <script src="https://logtaha.github.io/static-page/js/qrious.min.js"></script>
-  <script src="https://logtaha.github.io/static-page/js/qr-code-styling.js"></script> 
-
+  <script src="js/1.js"></script>
+  <script src="js/2.js"></script>
+  <script src="js/3.js"></script>
+  <script src="js/4.js"></script>
+  <link href="css/Vazirmatn-Variable-font-face.css">
   
 
   <style>
@@ -474,7 +473,7 @@
       // تولید کد QR سفید برای صفحه اصلی
       try {
         const qrCode = new QRCodeStyling({
-          width: 200,
+          width: 0,
           height: 200,
           data: "{{ .subUrl }}",
           qrOptions: { errorCorrectionLevel: "H" },
