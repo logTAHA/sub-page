@@ -8,7 +8,7 @@
   <link href="https://logtaha.github.io/static-page/css/Vazirmatn-Variable-font-face.css" rel="stylesheet" type="text/css" />
   <script src="https://logtaha.github.io/static-page/js/jalaali.min.js"></script>
   <script src="https://logtaha.github.io/static-page/js/qrious.min.js"></script>
-  <script src="https://logtaha.github.io/static-page/js/qr-code-styling.js"></script>
+  <script src="https://logtaha.github.io/static-page/js/qr-code-styling.js"></script> 
 
   
 
@@ -474,8 +474,8 @@
       // تولید کد QR سفید برای صفحه اصلی
       try {
         const qrCode = new QRCodeStyling({
-          width: 320,
-          height: 320,
+          width: 200,
+          height: 200,
           data: "{{ .subUrl }}",
           qrOptions: { errorCorrectionLevel: "H" },
           dotsOptions: { color: "#FFFFFF", type: "rounded" },
@@ -501,8 +501,8 @@
         // تولید کد QR سیاه برای مودال
         try {
           const qrModal = new QRCodeStyling({
-            width: 320,
-            height: 320,
+            width: 200,
+            height: 200,
             data: "{{ .subUrl }}",
             qrOptions: { errorCorrectionLevel: "H" },
             dotsOptions: { color: "#000000", type: "rounded" },
