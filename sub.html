@@ -8,30 +8,7 @@
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@33.003/Vazirmatn-Variable-font-face.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'gradient': 'gradient 8s linear infinite',
-          },
-          keyframes: {
-            'gradient': {
-              '0%, 100%': {
-                'background-size': '200% 200%',
-                'background-position': 'left center'
-              },
-              '50%': {
-                'background-size': '200% 200%',
-                'background-position': 'right center'
-              }
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
 
   <style>
     @keyframes fadeIn {
@@ -45,37 +22,13 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
+    body, html {
+      position: relative;
+      z-index: 0;
+    }
+
     body {
       font-family: 'Vazirmatn', sans-serif;
-    }
-    body.light {
-      background: #f3f4f6 !important;
-      color: #1f2937 !important;
-    }
-    body.light .glass {
-      background: rgba(255, 255, 255, 0.8) !important;
-      border-color: #d1d5db !important;
-      color: #1f2937 !important;
-    }
-    body.light h1, body.light h2, body.light h3, body.light p, body.light span {
-      color: #1f2937 !important;
-    }
-    body.light .bg-gradient-to-br {
-      background-image: linear-gradient(to bottom right, #f3f4f6, #e5e7eb, #f3f4f6) !important;
-    }
-    #theme-toggle {
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 50;
-      padding: 0.5rem;
-      border-radius: 9999px;
-      background: rgba(31, 41, 55, 0.5);
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    #theme-toggle:hover {
-      background: rgba(31, 41, 55, 0.7);
     }
     .app-button {
       display: flex;
@@ -90,16 +43,68 @@
       background: linear-gradient(to right, rgba(79, 70, 229, 0.9), rgba(109, 40, 217, 0.9));
       transform: translateY(-2px);
     }
+
+    .modal-enter {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    .modal-enter-active {
+      opacity: 1;
+      transform: scale(1);
+      transition: all 0.3s ease-out;
+    }
+
+    .modal-leave {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .modal-leave-active {
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.2s ease-in;
+    }
+    #qrModalOverlay {
+      display: none;
+      opacity: 0;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      transition: opacity 0.4s ease-in-out;
+      pointer-events: none;
+    }
+
+    #qrModalOverlay.show {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #qrBackdrop {
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5); /* تیرگی کمتر */
+      backdrop-filter: blur(6px); /* تاری کمتر */
+      -webkit-backdrop-filter: blur(6px);
+      transition: backdrop-filter 0.4s ease-in-out, background-color 0.4s ease-in-out;
+    }
+
+    #qrModalBox {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: scale(0.95);
+      opacity: 0;
+    }
+
+    #qrModalBox.show {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8">
-  <button id="theme-toggle" onclick="toggleTheme()">
-    <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-        d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M6.05 6.05L4.636 4.636m12.728 0L18.364 4.636M6.05 17.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
-    </svg>
-  </button>
-
   <div class="max-w-2xl mx-auto space-y-6">
     <!-- Subscription Info Section -->
     <div class="glass bg-gray-800/50 rounded-2xl p-8 text-center border border-gray-700/50 shadow-xl fade-in">
@@ -181,9 +186,27 @@
 
     <!-- QR Code -->
     <div class="glass bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 shadow-lg text-center fade-in">
-      <canvas id="qrcode" class="mx-auto mb-4" width="200" height="200"></canvas>
+      <div id="qrcode" class="mx-auto mb-4" width="200" height="200"></div>
       <p class="text-gray-400">برای وارد کردن پیکربندی اسکن کنید</p>
+      <button id="showQrBtn" class="mt-2 text-sm text-cyan-400 hover:underline">
+        اگر اسکن نمی‌شود اینجا کلیک کنید
+      </button>  
     </div>
+
+    <!-- Modal Overlay -->
+    <div id="qrModalOverlay" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+      <!-- تارکننده -->
+      <div id="qrBackdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"></div>
+
+      <!-- Modal Box -->
+      <div id="qrModalBox" class="relative bg-white rounded-xl p-6 shadow-2xl text-center transform scale-95 opacity-0 transition-all duration-300 z-10 w-[240px]">
+        <button id="closeQrModal" class="absolute top-2 right-2 text-black hover:text-gray-700 text-3xl font-bold leading-none">&times;</button>
+        <div id="qrModalCode" class="mt-6 mb-2"></div>
+      </div>
+    </div>
+
+
+
 
     <!-- Connection Details -->
     <div class="glass bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 shadow-lg fade-in">
@@ -215,171 +238,100 @@
       </div>
     </div>
 
-    <!-- App Buttons -->
-    <div class="flex flex-wrap gap-4 justify-center fade-in">
-      <a href="v2rayng://install-config?url={{ .subUrl }}" class="app-button">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18l-6-6h12l-6 6z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12"/>
-        </svg>
-        باز کردن در V2rayNG
-      </a>
-      <a href="streisand://import/{{ .subUrl }}" class="app-button">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18l-6-6h12l-6 6z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12"/>
-        </svg>
-        باز کردن در Streisand
-      </a>
-    </div>
 
     <!-- Apps Section -->
-    <div class="glass bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 shadow-lg fade-in">
-      <h2 class="text-2xl font-semibold text-center mb-8">برنامه ها</h2>
-      <div class="grid gap-6">
+    <div class="glass bg-gray-800/50 rounded-lg p-6 border border-gray-700/50 shadow-lg fade-in">
+      <h2 class="text-xl font-semibold text-center mb-6 text-white">برنامه‌ها</h2>
+
+      <div class="flex flex-wrap justify-center gap-6">
+        
         <!-- iOS -->
-        <div class="p-4 rounded-lg bg-gray-900/30">
-          <div class="flex items-center justify-between">
-            <div class="text-lg font-medium text-gray-300">iOS</div>
-            <div class="flex flex-wrap gap-4">
-              <div class="flex items-center bg-gray-800/50 rounded-lg p-3 transition-all hover:bg-gray-700/50">
-                <div class="mr-3">
-                  <div class="font-medium">Streisand</div>
-                  <div class="text-sm text-gray-400">iOS 15+</div>
-                </div>
-                <div class="flex gap-2">
-                  <a href="https://apps.apple.com/us/app/streisand/id6450534064" target="_blank">
-                    <button class="p-2 hover:bg-gray-600/50 rounded-lg transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                  </a>
-                </div>
-              </div>
+        <div class="w-44 p-4 rounded-lg bg-gray-900/30 hover:scale-[1.03] transition duration-200 relative">
+          <div class="flex flex-col items-center text-center">
+            <img src="assets/icons/apple.svg" class="w-14 h-14 mb-3" alt="iOS Icon">
+            <div class="font-semibold text-gray-200 text-sm mb-2">iOS</div>
+            
+            <div class="space-y-2 w-full">
+              <!-- App Store -->
+              <a href="https://apps.apple.com/us/app/streisand/id6450534064" target="_blank"
+                class="relative block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-300 hover:scale-105"
+                style="background-color: #5b497c; box-shadow: 0 0 5px rgba(77,54,119,0.5); border-radius: 0.5rem;">
+                <!-- quick-fade gradient stroke -->
+                <span class="absolute inset-0 rounded-lg" style="padding:1px; background: linear-gradient(to bottom left, rgba(255,255,255,0.8) 10%, transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; -webkit-mask-composite: destination-out;"></span>
+                <span class="relative">App Store</span>
+              </a>
+              <!-- Telegram -->
+              <a href="https://t.me/YourTelegramChannel_ios" target="_blank"
+                class="block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-300 hover:scale-105"
+                style="background-color: #555555; box-shadow: 0 0 5px rgba(85,85,85,0.5); border-radius: 0.5rem;">
+                تلگرام
+              </a>
             </div>
           </div>
         </div>
 
         <!-- Android -->
-        <div class="p-4 rounded-lg bg-gray-900/30">
-          <div class="flex items-center justify-between">
-            <div class="text-lg font-medium text-gray-300">Android</div>
-            <div class="flex flex-wrap gap-4">
-              <div class="flex items-center bg-gray-800/50 rounded-lg p-3 transition-all hover:bg-gray-700/50">
-                <div class="mr-3">
-                  <div class="font-medium">V2rayNG</div>
-                  <div class="text-sm text-gray-400">Android 8+</div>
-                </div>
-                <div class="flex gap-2">
-                  <a href="https://play.google.com/store/apps/details?id=com.v2ray.ang" target="_blank">
-                    <button class="p-2 hover:bg-gray-600/50 rounded-lg transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                  </a>
-                </div>
-              </div>
+        <div class="w-44 p-4 rounded-lg bg-gray-900/30 hover:scale-[1.03] transition duration-200 relative">
+          <div class="flex flex-col items-center text-center">
+            <img src="assets/icons/android.svg" class="w-14 h-14 mb-3" alt="Android Icon">
+            <div class="font-semibold text-gray-200 text-sm mb-2">Android</div>
+            
+            <div class="space-y-2 w-full">
+              <!-- Google Play -->
+              <a href="https://play.google.com/store/apps/details?id=com.v2ray.ang" target="_blank"
+              class="relative block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-700 hover:scale-105 hover:shadow-[0_0_10px_rgba(3,173,159,0.8)]"
+              style="background-color: #2c817a; box-shadow: 0 0 2px rgba(3,173,159,0.3); border-radius: 0.5rem;">
+
+              <!-- top center fade gradient stroke -->
+              <span class="absolute inset-0 rounded-lg"
+                    style="padding:1px; background: linear-gradient(to bottom, rgba(255,255,255,0.8) 10%, transparent 40%);
+                          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                          mask-composite: exclude; -webkit-mask-composite: destination-out;">
+              </span>
+
+              <span class="relative">Google Play</span>
+              </a>
+
+              <!-- Telegram -->
+              <a href="https://t.me/YourTelegramChannel_android" target="_blank"
+                class="block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-300 hover:scale-105"
+                style="background-color: #555555; box-shadow: 0 0 5px rgba(85,85,85,0.5); border-radius: 0.5rem;">
+                تلگرام
+              </a>
             </div>
           </div>
         </div>
 
         <!-- Windows -->
-        <div class="p-4 rounded-lg bg-gray-900/30">
-          <div class="flex items-center justify-between">
-            <div class="text-lg font-medium text-gray-300">Windows</div>
-            <div class="flex flex-wrap gap-4">
-              <div class="flex items-center bg-gray-800/50 rounded-lg p-3 transition-all hover:bg-gray-700/50">
-                <div class="mr-3">
-                  <div class="font-medium">V2rayN</div>
-                  <div class="text-sm text-gray-400">Windows 10+</div>
-                </div>
-                <div class="flex gap-2">
-                  <a href="https://github.com/2dust/v2rayN/releases/" target="_blank">
-                    <button class="p-2 hover:bg-gray-600/50 rounded-lg transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                  </a>
-                </div>
-              </div>
+        <div class="w-44 p-4 rounded-lg bg-gray-900/30 hover:scale-[1.03] transition duration-200 relative">
+          <div class="flex flex-col items-center text-center">
+            <img src="assets/icons/windows.svg" class="w-14 h-14 mb-3" alt="Windows Icon">
+            <div class="font-semibold text-gray-200 text-sm mb-2">Windows</div>
+            
+            <div class="space-y-2 w-full">
+              <!-- GitHub -->
+              <a href="https://github.com/2dust/v2rayN/releases/" target="_blank"
+                class="relative block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-300 hover:scale-105"
+                style="background-color: #3c6d9e; box-shadow: 0 0 5px rgba(25,118,210,0.5); border-radius: 0.5rem;">
+                <!-- mirrored quick-fade gradient stroke -->
+                <span class="absolute inset-0 rounded-lg" style="padding:1px; background: linear-gradient(to bottom right, rgba(255,255,255,0.8) 10%, transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; -webkit-mask-composite: destination-out;"></span>
+                <span class="relative">GitHub</span>
+              </a>
+              <!-- Telegram -->
+              <a href="https://t.me/YourTelegramChannel_windows" target="_blank"
+                class="block px-3 py-2 rounded-lg text-white text-sm font-medium transition duration-300 hover:scale-105"
+                style="background-color: #555555; box-shadow: 0 0 5px rgba(85,85,85,0.5); border-radius: 0.5rem;">
+                تلگرام
+              </a>
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Installation Tutorial -->
-    <div class="glass bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 shadow-lg fade-in">
-      <h2 class="text-2xl font-semibold text-center mb-8">آموزش نصب</h2>
-      <div class="grid gap-6">
-        <!-- iOS Tutorial -->
-        <div class="tutorial-item">
-          <div class="flex items-center justify-between cursor-pointer p-4 hover:bg-gray-800/30 rounded-lg transition-all" onclick="toggleTutorial('ios')">
-            <div class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14.5c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"/>
-              </svg>
-              <span class="text-lg font-medium">آموزش نصب iOS</span>
-            </div>
-            <svg class="w-5 h-5 transform transition-transform duration-300 tutorial-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-          <div class="hidden tutorial-content p-4 rounded-lg bg-gray-800/30 mt-2">
-            <video controls class="rounded-lg w-full">
-              <source src="videos/ios_tutorial.mp4" type="video/mp4">
-              مرورگر شما از ویدئو پشتیبانی نمی‌کند.
-            </video>
-          </div>
-        </div>
 
-        <!-- Android Tutorial -->
-        <div class="tutorial-item">
-          <div class="flex items-center justify-between cursor-pointer p-4 hover:bg-gray-800/30 rounded-lg transition-all" onclick="toggleTutorial('android')">
-            <div class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3h6m-6 18h6M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-              </svg>
-              <span class="text-lg font-medium">آموزش نصب Android</span>
-            </div>
-            <svg class="w-5 h-5 transform transition-transform duration-300 tutorial-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-          <div class="hidden tutorial-content p-4 rounded-lg bg-gray-800/30 mt-2">
-            <video controls class="rounded-lg w-full">
-              <source src="videos/android_tutorial.mp4" type="video/mp4">
-              مرورگر شما از ویدئو پشتیبانی نمی‌کند.
-            </video>
-          </div>
-        </div>
-
-        <!-- Windows Tutorial -->
-        <div class="tutorial-item">
-          <div class="flex items-center justify-between cursor-pointer p-4 hover:bg-gray-800/30 rounded-lg transition-all" onclick="toggleTutorial('windows')">
-            <div class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-              </svg>
-              <span class="text-lg font-medium">آموزش نصب Windows</span>
-            </div>
-            <svg class="w-5 h-5 transform transition-transform duration-300 tutorial-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-          <div class="hidden tutorial-content p-4 rounded-lg bg-gray-800/30 mt-2">
-            <video controls class="rounded-lg w-full">
-              <source src="videos/windows_tutorial.mp4" type="video/mp4">
-              مرورگر شما از ویدئو پشتیبانی نمی‌کند.
-            </video>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Support Section -->
     <div class="glass bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 shadow-lg fade-in">
@@ -399,40 +351,11 @@
             </a>
           </div>
         </div>
-        <div class="p-4 rounded-lg bg-gray-900/30">
-          <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="text-center md:text-right">
-              <h3 class="text-lg font-medium text-gray-300 mb-2">سوالات متداول</h3>
-              <p class="text-gray-400">پاسخ سوالات متداول کاربران را اینجا مشاهده کنید</p>
-            </div>
-            <a href="#" class="app-button">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              مشاهده سوالات
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
   <script>
-    function toggleTheme() {
-      document.body.classList.toggle('light');
-      const themeButton = document.getElementById('theme-toggle');
-      if(document.body.classList.contains('light')) {
-        themeButton.innerHTML = `<svg <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17.293 13.293A8 8 0 116.707 2.707 8 8 0 0017.293  13.293z"/>
-        </svg>`;
-      } else {
-        themeButton.innerHTML = `<svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M6.05 6.05L4.636 4.636m12.728 0L18.364 4.636M6.05 17.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
-        </svg>`;
-      }
-    }
-
     function formatBytes(bytes, decimals = 2) {
       if (bytes === 0) return '0 بایت';
       const k = 1024;
@@ -536,25 +459,108 @@
       statusElement.textContent = 'غیرفعال';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      try {
-        const qr = new QRious({
-          element: document.getElementById('qrcode'),
-          value: '{{ .subUrl }}',
-          size: 200,
-          level: 'H',
-          background: '#ffffff',
-          foreground: '#000000',
-          padding: 16
-        });
-      } catch (error) {
-        console.error('Error generating QR code:', error);
-        const qrcodeElement = document.getElementById('qrcode');
-        if (qrcodeElement) {
-          qrcodeElement.insertAdjacentHTML('afterend', '<p class="text-red-500 mt-2">خطا در ایجاد کد QR</p>');
+    document.addEventListener('DOMContentLoaded', function () {
+    try {
+      const qrCode = new QRCodeStyling({
+        width: 200,
+        height: 200,
+        data: "{{ .subUrl }}",
+        qrOptions: {
+          errorCorrectionLevel: "H"
+        },
+        dotsOptions: {
+          color: "#000000",
+          type: "rounded"
+        },
+        backgroundOptions: {
+          color: "transparent"
         }
+      });
+
+      qrCode.append(document.getElementById('qrcode'));
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      const qrcodeElement = document.getElementById('qrcode');
+      if (qrcodeElement) {
+        qrcodeElement.insertAdjacentHTML('afterend', '<p class="text-red-500 mt-2">خطا در ایجاد کد QR</p>');
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const showQrBtn = document.getElementById('showQrBtn');
+    const qrModalOverlay = document.getElementById('qrModalOverlay');
+    const qrModalBox = document.getElementById('qrModalBox');
+    const closeQrModal = document.getElementById('closeQrModal');
+    const qrModalCode = document.getElementById('qrModalCode');
+    const qrMainCode = document.getElementById('qrcode');
+
+    let qrBuilt = false;
+
+    // تلاش برای ساخت QR اصلی
+    try {
+      const qrCode = new QRCodeStyling({
+        width: 200,
+        height: 200,
+        data: "{{ .subUrl }}",
+        qrOptions: { errorCorrectionLevel: "H" },
+        dotsOptions: { color: "#000000", type: "rounded" },
+        backgroundOptions: { color: "transparent" }
+      });
+      qrCode.append(qrMainCode);
+      qrBuilt = true;
+    } catch (error) {
+      qrBuilt = false;
+      console.error("خطا در ساخت QR:", error);
+      if (qrMainCode) {
+        qrMainCode.innerHTML = '<p class="text-red-500 mt-2">نتونستم کد QR بسازم</p>';
+      }
+    }
+
+    function openModal() {
+      qrModalCode.innerHTML = '';
+      qrModalOverlay.style.display = 'flex';
+
+      requestAnimationFrame(() => {
+        qrModalOverlay.classList.add('show');
+        qrModalBox.classList.add('show');
+      });
+
+      // تلاش برای ساخت QR داخل مودال
+      try {
+        const qrModal = new QRCodeStyling({
+          width: 200,
+          height: 200,
+          data: "{{ .subUrl }}",
+          qrOptions: { errorCorrectionLevel: "H" },
+          dotsOptions: { color: "#000000", type: "rounded" },
+          backgroundOptions: { color: "transparent" }
+        });
+        qrModal.append(qrModalCode);
+      } catch (error) {
+        console.error("ساخت QR در مودال شکست خورد:", error);
+        qrModalCode.innerHTML = '<p class="text-red-600">نتونستم QR Code بسازم</p>';
+      }
+    }
+
+    function closeModal() {
+      qrModalBox.classList.remove('show');
+      qrModalOverlay.classList.remove('show');
+      setTimeout(() => {
+        qrModalOverlay.style.display = 'none';
+      }, 300);
+    }
+
+    showQrBtn.addEventListener('click', openModal);
+    closeQrModal.addEventListener('click', closeModal);
+
+    qrModalOverlay.addEventListener('click', (e) => {
+      if (e.target === qrModalOverlay || e.target === document.getElementById('qrBackdrop')) {
+        closeModal();
       }
     });
-  </script>
+  });
+  </script>    
+
 </body>
 </html>
