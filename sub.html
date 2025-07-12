@@ -172,8 +172,8 @@
     <!-- Expiry Date -->
     <div class="glass bg-gray-800/50 rounded-xl p-4 border border-gray-700/50 shadow-lg text-center flex flex-col items-center">
       <div class="flex flex-col items-center space-y-1">
-        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M8 7V3h8v4m-9 4h10v10H7V11z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M8 7V3h8v4H4v13h16V7h-4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span class="text-gray-400">تاریخ انقضا</span>
       </div>
@@ -183,8 +183,8 @@
     <!-- Status -->
     <div class="glass bg-gray-800/50 rounded-xl p-4 border border-gray-700/50 shadow-lg text-center flex flex-col items-center">
       <div class="flex flex-col items-center space-y-1">
-        <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         <span class="text-gray-400">وضعیت</span>
       </div>
@@ -441,16 +441,24 @@
     const uploadByte = parseInt('{{ .uploadByte }}', 10);
     const usedBytes = downloadByte + uploadByte;
     const remainingBytes = totalByte - usedBytes;
+
+    document.getElementById('downloadText').textContent = formatBytes(downloadByte);
+    document.getElementById('uploadText').textContent = formatBytes(uploadByte);
+
     
     document.getElementById('usedText').textContent = 'استفاده شده: ' + formatBytes(usedBytes);
+    let usagePercentage = 100;
     if (totalByte === 0) {
       document.getElementById('remainingText').textContent = 'کل: ∞ | باقی مانده: ∞';
       document.getElementById('usageBar').style.width = '100%';
     } else {
       document.getElementById('remainingText').textContent = 'باقی مانده: ' + formatBytes(remainingBytes);
-      const usagePercentage = Math.min(100, (usedBytes / totalByte) * 100);
+      usagePercentage = Math.min(100, (usedBytes / totalByte) * 100);
       document.getElementById('usageBar').style.width = usagePercentage + '%';
     }
+    document.getElementById('usagePercent').textContent = 'درصد استفاده: ' + usagePercentage.toFixed(1) + '%';
+
+
 
     const expireValue = '{{ .expire }}';
     const expireTimestamp = parseInt(expireValue, 10) * 1000;
@@ -495,10 +503,8 @@
     } else {
       statusElement.textContent = 'غیرفعال';
     }
-  </script>
 
 
-  <script>
 
     document.addEventListener('DOMContentLoaded', () => {
           const showQrBtn = document.getElementById('showQrBtn');
@@ -520,8 +526,8 @@
 
               image: "https://hdl.tmsosis.xyz/template/img/qr-logo.png", 
               imageOptions: {
-                margin: 2,
-                imageSize: 0.65,
+                margin: 1.8,
+                imageSize: 0.55,
                 hideBackgroundDots: true
               }
 
@@ -578,8 +584,8 @@
             }
           });
         });
-
   </script>
+
 
  <!-- Deleting Loading -->
   <script>
